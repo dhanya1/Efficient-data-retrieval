@@ -1,0 +1,7 @@
+# Creating tables and importing CSV
+
+sqlite> create table persons('device_id','appears','disappears','age','gender');
+sqlite> .mode csv
+sqlite> .import persons.csv persons
+
+
