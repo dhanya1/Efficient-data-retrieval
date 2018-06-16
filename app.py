@@ -44,42 +44,28 @@ class Person(db.Model):
 def hello():
     return "Hello World!"
 
-@app.route("/viewercount",methods=['GET'])
+@app.route("/viewer-count",methods=['GET'])
 def views():
-    args = request.args
-    content_id = args['content']
-    device_id = args['device']
-    start_time = args['start']
-    end_time = args['end']
-    view = True
-    res = task.server_requests(device_id, content_id, start_time, end_time, view)
-    return jsonify({'start':start_time,'end':end_time,'device':device_id,'content':content_id,'views':res})
+    args = request.args.to_dict()
+    args['request'] = 'view'
+    args['view'] = task.server_requests(**args)
+    return jsonify(args)
 
-@app.route("/create_events", methods=['POST'])
-def create_events():
-    data = request.get_json()
-    new_row=Event(content_ID=data['content_ID'], device_ID=data['device_ID'], start_time=data['start_time'], end_time=data['end_time'])
-    db.session.add(new_row)
-    db.session.commit()
-    return jsonify({'message':'new row created for events'})
+@app.route("/avg-age", methods=['GET'])
+def avg_age():
+    args = request.args.to_dict()
+    args['request'] = 'avg_age'
+    args['avg_age'] = task.server_requests(**args)
+    return jsonify(args)
 
 
-@app.route("/get_all_events", methods=['GET'])
+@app.route("/gender-dist", methods=['GET'])
 def getall_events():
-    session = load_session()
-    events= session.query(events).all()
-    print(events)
-    output=[]
-    for event in events:
-        event_data={}
-        event_data['id']=event.id
-        event_data['content_ID']=event.content_ID
-        event_data['device_ID']=event.device_ID
-        event_data['start_time']=event.start_time
-        event_data['end_time']=event.end_time
-        output.append(event_data)
+    args = request.args.to_dict()
+    args['request'] = 'gender_dist'
+    args['gender_dist'] = task.server_requests(**args)
+    return jsonify(args)
 
-    return jsonify({'events': output})
 
 if __name__ == '__main__':
     app.run(debug=True)
