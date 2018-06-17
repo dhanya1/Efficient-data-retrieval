@@ -1,8 +1,11 @@
 import pandas as pd
 import sqlite3
 import os
+import sys
 
-
+if os.path.exists('advertima.db'):
+    print('Database already exists !!')
+    sys.exit()
 if not os.path.exists('events.csv'):
     events_csv = input('Provide full path to events.csv eg:/path/to/events.csv\n').strip()
 else:
@@ -51,12 +54,8 @@ person['appears'] = pd.to_datetime(person['appears'])
 person['disappears'] = pd.to_datetime(person['disappears'])
 person = person.sort_values(by=['device_id','appears'])
 person.head()
-print('Writing %s to database' %(persons_csv,db_file))
+print('Writing %s to database' %(persons_csv))
 person.to_sql(name="person", con=conn, if_exists="append", index=False)
-
-print('Indexing events table on content id')
-sql = "CREATE INDEX content_idx ON event (content_ID);"
-cur.execute(sql)
 
 print('Indexing events table on content id')
 sql = "CREATE INDEX content_idx ON event (content_ID);"
@@ -65,4 +64,6 @@ cur.execute(sql)
 print('Indexing persons table on device_id')
 sql = "CREATE INDEX pdevice_idx ON person (device_id);"
 cur.execute(sql)
+
+print('Database ready !!')
 
