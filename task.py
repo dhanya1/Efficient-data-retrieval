@@ -23,11 +23,13 @@ def server_requests(**kwargs):
         return exception(kwargs['request'])
     content_output['start_time'] = pd.to_datetime(content_output['start_time'],format='%Y-%m-%d %H:%M:%S')
     content_output['end_time'] = pd.to_datetime(content_output['end_time'],format='%Y-%m-%d %H:%M:%S')
-
+    kwargs['content_start'] = min(content_output['start_time'])
+    kwargs['content_end'] = max(content_output['end_time'])
 
     sql = "select * from person \
     where device_ID = {device_id} and  \
-    max(appears,'{start_time}') <  min(disappears, '{end_time}')".format(**kwargs)
+    max(appears,'{start_time}') <  min(disappears, '{end_time}') and \
+    appears < '{content_end}' and disappears > '{content_start}'".format(**kwargs)
     cur.execute(sql)
     person_output = pd.read_sql(sql,conn).reset_index(drop=True)
     type(person_output['appears'][0])
@@ -36,29 +38,25 @@ def server_requests(**kwargs):
     if len(person_output.index) == 0:
         return exception(kwargs['request'])
     count = 0; age = 0; male =0; female =0;
-    a = list(range(len(person_output.index)))
     b = list(range(len(content_output.index)))
+    new_data = pd.DataFrame() 
     for j in b:
-        for i in a:
-            if max(person_output['appears'][i],content_output['start_time'][j]) <= \
-            min(person_output['disappears'][i],content_output['end_time'][j]):
-                count+=1
-                if kwargs['request'] == 'avg_age':
-                    age += person_output['age'][i]
-                if kwargs['request'] == 'gender_dist':
-                    if person_output['gender'][i] == 'male':
-                        male +=1
-                    elif person_output['gender'][i] == 'female':
-                        female +=1
-                    else:
-                        pass
-
+        rows = (person_output['appears']<=content_output['end_time'][j]) & (person_output['disappears'] >= content_output['start_time'][j])
+        #rows = max(person_output['appears'],content_output['start_time'][j]) < min(content_output['end_time'][j], person_output['disappears']) 
+        rows1 = (person_output['appears']<= person_output['disappears']) & (content_output['start_time'][j]<=content_output['end_time'][j]) 
+        new_data = pd.concat([new_data,person_output.loc[rows1&rows]])
+    count = len(new_data.index)
     if kwargs['request'] == 'avg_age':
-        return age/count
+        return sum(new_data['age'])/count
     elif kwargs['request'] == 'gender_dist':
+        male = len(new_data.loc[(new_data['gender'] == 'male')].index)
+        female = len(new_output.loc[(new_data['gender'] == 'female')].index)
         return {'male':male/count,'female':female/count}
     else:
         return count
 
-a = {'device_id' :5, 'content_id':2, 'start_time':"2016-01-31 00:00:00", 'end_time':"2016-01-31 00:01:41",'request':'avg_age'}
+a = {'device_id' :5, 'content_id':2, 'start_time':"2016-01-31 00:00:00", 'end_time':"2016-01-31 00:01:41",'request':'count'}
+t0 = time.time()
 print(server_requests(**a))
+t1 = time.time()
+print(t1-t0)
