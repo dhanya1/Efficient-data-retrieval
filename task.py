@@ -1,6 +1,5 @@
 import pandas as pd
 import sqlite3
-import time
 
 
 def exception(request_name):
@@ -72,13 +71,13 @@ def server_requests(**kwargs):
 
     # Returns the average age.
     if kwargs['request'] == 'avg_age':
-        return sum(new_data['age'])/count
+        return round(sum(new_data['age'])/count,1)
 
     # Returns the gender distribution.
     elif kwargs['request'] == 'gender_dist':
         male = len(new_data.loc[(new_data['gender'] == 'male')].index)
         female = len(new_data.loc[(new_data['gender'] == 'female')].index)
-        return {'male':male/count,'female':female/count}
+        return {'male':round(male/count,2),'female':round(female/count,2)}
 
     # Returns the number of views.
     elif kwargs['request'] == 'view':
@@ -88,9 +87,4 @@ def server_requests(**kwargs):
     else:
         return 'Unidentified request'
 
-t0 = time.time()
-a = {'device_id' :2, 'content_id':2, 'start_time':"2016-01-01 00:47:25",
-     'end_time':"2016-01-10 09:47:25",'request':'view'}
-print(server_requests(**a))
-t1 = time.time()
-print(t1-t0)
+
