@@ -43,7 +43,7 @@ try:
     conn = sqlite3.connect('advertima.db')
 except IOError:
     db_file = input('Please provide full path to create database /path/to/advertima.db').strip()
-    conn = sqlite3.connect('advertima.db')
+    conn = sqlite3.connect(db_file)
 cur = conn.cursor()
 merged.to_sql(name="event", con=conn, if_exists="append", index=False)
 
